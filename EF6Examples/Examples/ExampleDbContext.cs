@@ -14,6 +14,12 @@ namespace Examples
         public virtual DbSet<Person> Persons { get; set; }
         public virtual DbSet<Pet> Pets { get; set; }
 
+        public ExampleDbContext()
+            : base("DefaultConnection")
+        {
+
+        }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();

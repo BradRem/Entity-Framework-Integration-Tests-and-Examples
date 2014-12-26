@@ -21,7 +21,13 @@ namespace Examples.Tests
         public const string PET_PUFFY = "Puffy";
         public const string PET_FIDO = "Fido";
 
+        [TestFixtureSetUp]
+        public void Setup()
+        {
+            HibernatingRhinos.Profiler.Appender.EntityFramework.EntityFrameworkProfiler.Initialize();
+        }
 
+        
         [Test]
         public void BasicQueryForOneEntity()
         {
