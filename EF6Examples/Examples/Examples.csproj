@@ -58,9 +58,14 @@
     <Compile Include="Migrations\201412210309049_SetupInitialDatabase.Designer.cs">
       <DependentUpon>201412210309049_SetupInitialDatabase.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201412270224144_PetFoodBrand.cs" />
+    <Compile Include="Migrations\201412270224144_PetFoodBrand.Designer.cs">
+      <DependentUpon>201412270224144_PetFoodBrand.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Person.cs" />
     <Compile Include="Models\Pet.cs" />
+    <Compile Include="Models\PetFoodBrand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tests\LazyLoadingExamples.cs" />
   </ItemGroup>
@@ -71,6 +76,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201412210309049_SetupInitialDatabase.resx">
       <DependentUpon>201412210309049_SetupInitialDatabase.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201412270224144_PetFoodBrand.resx">
+      <DependentUpon>201412270224144_PetFoodBrand.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -20,6 +20,8 @@ namespace Examples.Tests
         public const string PET_FLUFFY = "Fluffy";
         public const string PET_PUFFY = "Puffy";
         public const string PET_FIDO = "Fido";
+        public const string FOOD_ALPHA = "Alpha Chow";
+        public const string FOOD_BRAVO = "Bravo Food";
 
         [TestFixtureSetUp]
         public void Setup()
