@@ -109,6 +109,47 @@ namespace Examples.Tests
             }
         }
 
+        // same as above query notation
+        [Test]
+        public void DotNotationReferencingANonIncludedPropertyStillRetrievesThatProperty()
+        {
+            using (ExampleDbContext dbContext = new ExampleDbContext())
+            {
+                dbContext.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
+
+                //select Pets, even though it wasn't explicitly Included
+                List<Pet> result = dbContext.Persons.Where(x => x.Name == PERSON_JANE)
+                    .Select(x => x.Pets).First();
+
+                /*
+                 * 
+
+                    SELECT [Project1].[Id]             AS [Id],
+                           [Project1].[C1]             AS [C1],
+                           [Project1].[Id1]            AS [Id1],
+                           [Project1].[Name]           AS [Name],
+                           [Project1].[OwningPersonId] AS [OwningPersonId]
+                    FROM   (SELECT [Limit1].[Id]              AS [Id],
+                                   [Extent2].[Id]             AS [Id1],
+                                   [Extent2].[Name]           AS [Name],
+                                   [Extent2].[OwningPersonId] AS [OwningPersonId],
+                                   CASE
+                                     WHEN ([Extent2].[Id] IS NULL) THEN CAST(NULL AS int)
+                                     ELSE 1
+                                   END                        AS [C1]
+                            FROM   (SELECT TOP (1) [Extent1].[Id] AS [Id]
+                                    FROM   [dbo].[Person] AS [Extent1]
+                                    WHERE  N'Jane' = [Extent1].[Name]) AS [Limit1]
+                                   LEFT OUTER JOIN [dbo].[Pet] AS [Extent2]
+                                     ON [Limit1].[Id] = [Extent2].[OwningPersonId]) AS [Project1]
+                    ORDER  BY [Project1].[Id] ASC,
+                              [Project1].[C1] ASC                 
+
+                 * * 
+                 * */
+            }
+        }
+
         [Test]
         public void SelectingASingleFieldDoesntPullBackTheEntireEntity()
         {
