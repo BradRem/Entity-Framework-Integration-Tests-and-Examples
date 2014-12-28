@@ -29,9 +29,9 @@ namespace Examples.Tests
             HibernatingRhinos.Profiler.Appender.EntityFramework.EntityFrameworkProfiler.Initialize();
         }
 
-        
+
         [Test]
-        public void BasicQueryForOneEntity()
+        public void BasicQueryForOneEntityDoesNotEagerlyLoad()
         {
             using (ExampleDbContext dbContext = new ExampleDbContext())
             {
@@ -49,6 +49,7 @@ namespace Examples.Tests
                  * */
             }
         }
+
 
         [Test]
         public void UsingFromSelectWhereYieldsSameResultsAsJustDoingADotFirst()
@@ -80,9 +81,9 @@ namespace Examples.Tests
                 dbContext.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
 
                 List<Pet> result = (from person in dbContext.Persons
-                                 where person.Name == PERSON_JANE
-                                 //select Pets, even though it wasn't explicitly Included
-                                 select person.Pets)
+                                    where person.Name == PERSON_JANE
+                                    //select Pets, even though it wasn't explicitly Included
+                                    select person.Pets)
                                     .First();
 
                 /*
@@ -160,8 +161,8 @@ namespace Examples.Tests
                 dbContext.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
 
                 string name = (from person in dbContext.Persons
-                                 where person.Name == PERSON_JANE
-                                 select person.Name).First();
+                               where person.Name == PERSON_JANE
+                               select person.Name).First();
 
                 /*
                  * SELECT TOP (1) 
@@ -329,13 +330,92 @@ namespace Examples.Tests
                 dbContext.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
 
                 var result = (from person in dbContext.Persons
-                                                      .Include("Pets")
+                              .Include("Pets")
                               where person.Name == PERSON_JANE
                               //rather than just selecting 'person', creating a new anonynous type with Person as a property
                               //will not pull back the Included Pet entities
                               select new
                               {
                                   Person = person
+                              }).First();
+
+                //nothing related to Pets is eagerly loaded
+                /*
+                 * SELECT TOP (1) 
+                    [Extent1].[Id] AS [Id], 
+                    [Extent1].[Name] AS [Name]
+                    FROM [dbo].[Person] AS [Extent1]
+                    WHERE N'Jane' = [Extent1].[Name]
+                 * */
+
+                Assert.That(result.Person.Pets.First(), Is.Not.Null);
+
+                //Pets are still lazy loaded
+                /*
+                * SELECT 
+                   [Extent1].[Id] AS [Id], 
+                   [Extent1].[Name] AS [Name], 
+                   [Extent1].[OwningPersonId] AS [OwningPersonId]
+                   FROM [dbo].[Pet] AS [Extent1]
+                   WHERE [Extent1].[OwningPersonId] = @EntityKeyValue1
+                * */
+            }
+        }
+
+        [Test]
+        public void FluentSyntaxIncludingPetsButOnlySelectingANewAnonymousObjectWithPersonAsAPropertyWillNotEagerlyLoadTheIncludedEntities()
+        {
+            using (ExampleDbContext dbContext = new ExampleDbContext())
+            {
+                dbContext.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
+
+                var result = dbContext.Persons.Include("Pets")
+                    .Where(x => x.Name == PERSON_JANE)
+                    //rather than just selecting 'person', creating a new anonynous type with Person as a property
+                    //will not pull back the Included Pet entities
+                    .Select(x => new
+                    {
+                        Person = x
+                    }).First();
+
+                //nothing related to Pets is eagerly loaded
+                /*
+                 * SELECT TOP (1) 
+                    [Extent1].[Id] AS [Id], 
+                    [Extent1].[Name] AS [Name]
+                    FROM [dbo].[Person] AS [Extent1]
+                    WHERE N'Jane' = [Extent1].[Name]
+                 * */
+
+                Assert.That(result.Person.Pets.First(), Is.Not.Null);
+
+                //Pets are still lazy loaded
+                /*
+                * SELECT 
+                   [Extent1].[Id] AS [Id], 
+                   [Extent1].[Name] AS [Name], 
+                   [Extent1].[OwningPersonId] AS [OwningPersonId]
+                   FROM [dbo].[Pet] AS [Extent1]
+                   WHERE [Extent1].[OwningPersonId] = @EntityKeyValue1
+                * */
+            }
+        }
+
+        [Test]
+        public void CreatingANewAnonymousTypeAndSelectingPersonAndPetsWillEagerlyLoadPets()
+        {
+            using (ExampleDbContext dbContext = new ExampleDbContext())
+            {
+                dbContext.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
+
+                var result = (from person in dbContext.Persons
+                              where person.Name == PERSON_JANE
+                              //rather than just selecting 'person', creating a new anonynous type with Person as a property
+                              //will not pull back the Included Pet entities
+                              select new
+                              {
+                                  Person = person,
+                                  Pets = person.Pets
                               }).First();
 
                 //nothing related to Pets is eagerly loaded
@@ -400,5 +480,6 @@ namespace Examples.Tests
                 Assert.That(result.PetNames, Is.Not.Null);
             }
         }
+
     }
 }
